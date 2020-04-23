@@ -1,0 +1,173 @@
+﻿@page "/addBook"
+@inject IBookManager articleManager
+@inject IAuthorsManager authorsManager
+@inject IBookGenresManager bookGenresManager
+@inject Microsoft.AspNetCore.Components.NavigationManager navigationManager
+@using Microsoft.AspNetCore.Components
+@using Microsoft.AspNetCore.Mvc.Rendering
+
+<h1>
+    Add Book
+</h1>
+
+<div class="row">
+    <div class="col-md-4">
+        <form>
+            <div class="form-group">
+                <label for="Name" class="control-label">Book Name</label>
+                <input for="Name" class="form-control" @bind-value="@article.BookName" />
+            </div>
+
+            <div class="form-group">
+                <label for="Name" class="control-label">Book Size</label>
+                <input for="Name" class="form-control" @bind-value="@article.BookSize" />
+            </div>
+            <table class="table table-bordered table-hover">
+                <thead>
+                    <tr>
+                        <th>
+                            Select Authors
+                            <span class="fa"></span>
+                        </th>
+                        <th>
+                            Select Genres
+                            <span class="fa"></span>
+                        </th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>
+                            <div class="overflow-auto multiselect list-group" style="width:600px;height:350px">
+                                <div id="checkboxes">
+                                    <div>
+                                        <div class="col-md-12" style="text-align:left">
+                                            @foreach (var item in this.Items)
+                                            {
+                                                <div class="checkbox">
+                                                    <label for="@item.Value">
+                                                        @if (item.Selected)
+                                                        {
+                                                            <input type="checkbox" id="@item.Value" checked="checked" @onchange="@((e) => CheckboxChanged(e, item.Value))" />
+                                                        }
+                                                        else
+                                                        {
+                                                            <input type="checkbox" id="@item.Value" @onchange="@((e) => CheckboxChanged(e, item.Value))" />
+                                                        }
+                                                        @item.Text
+                                                    </label>
+                                                </div>
+                                            }
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="overflow-auto multiselect list-group" style="width:600px;height:350px">
+                                <div id="checkboxes">
+                                    <div>
+                                        <div class="col-md-12" style="text-align:left">
+                                            @foreach (var item in this.ItemsGenra)
+                                            {
+                                                <div class="checkbox">
+                                                    <label for="@item.Value">
+                                                        @if (item.Selected)
+                                                        {
+                                                            <input type="checkbox" id="@item.Value" checked="checked" @onchange="@((e) => CheckboxChangedGenre(e, item.Value))" />
+                                                        }
+                                                        else
+                                                        {
+                                                            <input type="checkbox" id="@item.Value" @onchange="@((e) => CheckboxChangedGenre(e, item.Value))" />
+                                                        }
+                                                        @item.Text
+                                                    </label>
+                                                </div>
+                                            }
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div class="form-group">
+                <button type="button" class="btn btn-primary" @onclick="() => CreateArticle()">Save</button>
+                <button type="button" class="btn btn-danger" @onclick="() => cancel()">Cancel</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+@code {
+
+    Books article = new Books();
+    List<Authors> autherLists;
+    List<BookGenres> bookGeraList;
+
+    protected override async Task OnInitializedAsync()
+    {
+        autherLists = await authorsManager.ListAll(0, 1000, "FullNmae", "ASC", "");
+        Items = new MultiSelectList(autherLists, "AuthorId", "FullNmae");
+        bookGeraList = await bookGenresManager.ListAll(0, 1000, "BookGenreName", "ASC", "");
+        ItemsGenra = new MultiSelectList(bookGeraList, "BookGenreId", "BookGenreName");
+    }
+
+    protected async Task CreateArticle()
+    {
+        article.AuthorList = new List<Authors>();
+        foreach (var item1 in Items)
+        {
+            if (item1.Selected)
+            {
+                int val = Int32.Parse(item1.Value);
+                article.AuthorList.Add(autherLists.Where(x => x.AuthorId == val).First());
+            }
+        }
+
+        article.BookGenreList = new List<BookGenres>();
+        foreach (var item1 in ItemsGenra)
+        {
+            if (item1.Selected)
+            {
+                int val = Int32.Parse(item1.Value);
+                article.BookGenreList.Add(bookGeraList.Where(x => x.BookGenreId == val).First());
+            }
+        }
+
+        await articleManager.Create(article);
+
+        navigationManager.NavigateTo("/booklist");
+    }
+
+    [Parameter]
+    public MultiSelectList Items { get; set; } = null!;
+
+    [Parameter]
+    public MultiSelectList ItemsGenra { get; set; } = null!;
+
+    private void CheckboxChanged(ChangeEventArgs e, string key)
+    {
+        var i = this.Items.FirstOrDefault(i => i.Value == key);
+        if (i != null)
+        {
+            i.Selected = (bool)e.Value;
+        }
+    }
+
+    private void CheckboxChangedGenre(ChangeEventArgs e, string key)
+    {
+        var i = this.ItemsGenra.FirstOrDefault(i => i.Value == key);
+        if (i != null)
+        {
+            i.Selected = (bool)e.Value;
+        }
+    }
+
+    void cancel()
+    {
+        navigationManager.NavigateTo("/booklist");
+    }
+}

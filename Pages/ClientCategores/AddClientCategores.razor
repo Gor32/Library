@@ -1,0 +1,42 @@
+﻿@page "/addClientCategores"
+@inject IClientCategoresManager articleManager
+@inject Microsoft.AspNetCore.Components.NavigationManager navigationManager
+<h1>
+    Add Category
+</h1>
+
+<div class="row">
+    <div class="col-md-4">
+        <form>
+
+            <div class="form-group">
+                <label for="Name" class="control-label">Category Id</label>
+                <input for="Name" class="form-control" @bind-value="@article.ClientCategoryId" />
+            </div>
+            <div class="form-group">
+                <label for="Name" class="control-label">Name</label>
+                <input for="Name" class="form-control" @bind-value="@article.CategoryName" />
+            </div>
+            <div class="form-group">
+                <button type="button" class="btn btn-primary" @onclick="() => CreateArticle()">Save</button>
+                <button type="button" class="btn btn-danger" @onclick="() => cancel()">Cancel</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+@code {
+
+    ClientCategores article = new ClientCategores();
+
+    protected async Task CreateArticle()
+    {
+        await articleManager.Create(article);
+        navigationManager.NavigateTo("/clientcategoreslist");
+    }
+
+    void cancel()
+    {
+        navigationManager.NavigateTo("/clientcategoreslist");
+    }
+}

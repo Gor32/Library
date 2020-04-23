@@ -1,0 +1,62 @@
+﻿@page "/editClient/{ID}"
+@inject IClientsManager articleManager
+@inject IClientCategoresManager clientCategoresManager
+@inject Microsoft.AspNetCore.Components.NavigationManager navigationManager
+    <h1>
+        Edit Clients
+    </h1>
+
+<div class="row">
+    <div class="col-md-4">
+        <form>
+            <div class="form-group">
+                <label for="Name" class="control-label">Full Name</label>
+                <input for="Name" class="form-control" @bind-value="@articleEntity.ClientFullName" />
+                <input type="hidden" @bind-value="@articleEntity.ClientId" />
+                <div class="form-group">
+                    <label for="Name" class="control-label">Client Category</label>
+                    <select class="form-control" @bind="@articleEntity.ClientCategoryId">
+
+                        <option value=""></option>
+                        @foreach (var country in clientCategores)
+                        {
+                            <option value="@country.ClientCategoryId"> @country.CategoryName </option>
+                        }
+                        }
+
+                    </select>
+                </div>
+            </div>
+            <div class="form-group">
+                <button type="button" class="btn btn-primary" @onclick="() => UpdateArticle()">Save</button>
+                <button type="button" class="btn btn-danger" @onclick="() => cancel()">Cancel</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+@code  {
+
+    [Parameter]
+    public string ID { get; set; }
+
+    Clients articleEntity = new Clients();
+    List<ClientCategores> clientCategores;
+
+    protected override async Task OnInitializedAsync()
+    {
+        clientCategores = await clientCategoresManager.ListAll(0, 1000, "CategoryName", "DESC", "");
+        articleEntity = await articleManager.GetById(Convert.ToInt32(ID));
+    }
+
+    protected async Task UpdateArticle()
+    {
+        await articleManager.Update(articleEntity);
+        navigationManager.NavigateTo("/clientlist");
+    }
+
+    void cancel()
+    {
+        navigationManager.NavigateTo("/clientlist");
+    }
+}
